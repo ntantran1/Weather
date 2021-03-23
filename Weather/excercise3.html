@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+        <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+    </head>
+    <body style="max-width: 500px; margin: auto; background-color: rgb(209, 220, 235);">
+        <p style="margin-top: 20px;">
+            <label>Enter Zipcode for Details and Weather info</label><br>
+            <input type = "text"
+                   id = "myZip"
+                   value = "" />
+            <button id="sub" type="button">Submit</button>
+            <button id="clear" type="button">Clear</button>
+        </p>
+        <div id="main" style="border-style: groove; 
+        border-radius: 10px; width: 500px; height: 250px; padding: 20px; background-color: rgb(227, 235, 235); display: none;">
+            <!-- adding content to the body-->
+            <p id="city" style="font-size: 30px; margin-top: 1px; color: rgb(112, 110, 110);"></p>
+            <p id="day" style="font-size: 20px; margin-top: -25px; color: rgb(112, 110, 110);"></p>
+            <p id="condition" style="font-size: 20px; margin-top: -25px; color: rgb(112, 110, 110);"></p>
+            
+            <img  style="float:left; font-weight: bold; margin-right: 20px;" id="image" src="">
+            
+            <p style="font-size: 40px; font-weight: bold;" id="degree"></p>
+            
+
+        </div>
+        <div id="main2" style="border-style: groove; 
+        border-radius: 10px; width: 500px; height: 250px; padding: 20px; background-color: rgb(227, 235, 235); display: none;">
+            <p id="city2"></p>
+            <p id="state"></p>
+            <p id="latitude"></p>
+            <p id="longitude"></p>
+            <p id="zipcode"></p>
+            <p id="county"></p>
+            
+        </div>
+        <script>
+            $("#clear").on("click", function(){
+                $("#main").css("display", "none");
+                $("#main2").css("display", "none");
+                $("#myZip").val("");
+            });
+            $("#sub").on("click", function(){
+                var zip = $("#myZip").val();
+                $("#main").css("display", "block");
+                $("#main2").css("display", "block");
+                $.get("http://api.zippopotam.us/us/" + zip).done(function(data) {
+                    $("#city2").html("City: ".fontcolor("color: blue") + data.places[0]['place name']);
+                    $("#state").html("State: ".fontcolor("color: blue") + data.places[0].state);
+                    $("#latitude").html("Latidude: ".fontcolor("color: blue") +  data.places[0].latitude);
+                    $("#longitude").html("Longitude: ".fontcolor("color: blue") + data.places[0].longitude);
+                    $("#zipcode").html("Zip Code: ".fontcolor("color: blue") + zip);
+                    $("#county").html("Country: ".fontcolor("color: blue") + data.country);
+                });
+                $.get("https://api.openweathermap.org/data/2.5/weather?zip=" + zip + "&appid=690f2e3cc64b62c1c4d76ec39f9dd7da&units=metric").done(function(data) {
+                            var today = new Date();
+                            if (today.getMinutes()<10) {
+                                var min = "0" + today.getMinutes();
+                            } else {
+                                var min = today.getMinutes();
+                            }
+                            $("#city").html(data.name);
+                            $("#day").html(getDay(today.getDay()) + " " + today.getHours() + ":" + min);
+                            $("#condition").html(data.weather[0].main);
+                            $("#image").attr("src", "images/" + data.weather[0].icon + ".png");
+                            $("#degree").html(Math.round(data.main.temp) + "<sup role=\"button\" id=\"far\" style=\"font-size: 15px; color: blue; cursor:pointer;\">"
+                                + "&#8457; </sup><sup style=\"font-size: 15px;\">|</sup>"
+                                + "<sup  role=\"button\" id=\"cel\" style=\"font-size: 15px; color: black; cursor:pointer;\"> &#8451;</sup>"
+                                + "<span style=\"font-size: 20px; margin-left:50px\">Humididity: " + data.main.humidity +
+                                    "%<br> <span style=\"font-size: 20px; margin-left:140px\">Wind: " + Math.round(((data.wind.speed) /2.237) * 3.6)
+                                        + " km/h</span> </span>");
+                            var val = 1;
+                            addHandler1();
+                            //Function to add listener to farinheit
+                            function addHandler1() {
+
+                            
+                                $("#far").on("click", function(){
+                                    if(val == 1){
+            
+                                        $("#degree").html(Math.round((data.main.temp * (9/5)) + 32) + "<sup role=\"button\"  id=\"far\" style=\"font-size: 15px; color: black; cursor:pointer;\">"
+                                            + "&#8457; </sup><sup style=\"font-size: 15px; \">|</sup>"
+                                            + "<sup role=\"button\" id=\"cel\" style=\"font-size: 15px; color: blue; cursor:pointer;\"> &#8451;</sup>"  + "<span style=\"font-size: 20px; margin-left:50px\">Humididity: " + data.main.humidity +
+                                            "%<br> <span style=\"font-size: 20px; margin-left:140px\">Wind: " + Math.round(data.wind.speed)
+                                        + " mph</span> </span>");
+
+                                        val = 0;
+                                        addHandler2();
+                                        
+                                    }
+                                });
+                                
+                            }
+                                    
+
+                            //Function to add listener to celsius
+                            function addHandler2() {
+
+                            
+                                $("#cel").on("click", function(){
+                        
+                                    if(val == 0){
+                                        $("#degree").html(Math.round(data.main.temp) + "<sup role=\"button\" id=\"far\" style=\"font-size: 15px; color: blue; cursor:pointer;\">"
+                                            + "&#8457; </sup><sup style=\"font-size: 15px; \">|</sup>"
+                                            + "<sup role=\"button\" id=\"cel\" style=\"font-size: 15px; color: black; cursor:pointer;\"> &#8451;</sup>"  + "<span style=\"font-size: 20px; margin-left:50px\">Humididity: " + data.main.humidity +
+                                    "%<br> <span style=\"font-size: 20px; margin-left:140px\">Wind: " + Math.round(((data.wind.speed) /2.237) * 3.6)
+                                        + " km/h</span> </span>");
+
+                                        val = 1;
+                                        addHandler1();
+                                    }
+                                        
+
+                                });
+                            }
+                            
+                        
+                    });
+
+                
+                    
+                })
+                .fail(function(xhr,status,error) {
+                    alert("failed loading data - status=" + status + " error=" + error);
+                })
+                .always(function(data) {
+                    //$('.animLoading').fadeOut("slow");
+            });
+
+            //function to get the day of the week
+        function getDay(num) {
+            var day;
+            if(num == 0){
+                day = "Sunday";
+            }
+            if(num == 1){
+                day = "Monday";
+            }
+            if(num == 2){
+                day = "Tuesday";
+            }
+            if(num == 3){
+                day = "Wednesday";
+            }
+            if(num == 4){
+                day = "Thursday";
+            }
+            if(num == 5){
+                day = "Friday";
+            }
+            if(num == 6){
+                day = "Saturday";
+            }
+
+            return day;
+        }
+            
+        </script>
+    </body>
